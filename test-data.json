@@ -1,0 +1,94 @@
+PUT ohamazon
+
+GET /ohamazon/_mappings
+
+PUT /ohamazon/_mapping/book
+{
+  "book": {
+    "properties": {
+      "author": { "type": "string" },
+      "isbn-10": { "type": "string", "index": "not_analyzed" },
+      "isbn-13": { "type": "string", "index": "not_analyzed" },
+      "publisher": { "type": "string" },
+      "datePublished": { "type": "date", "format": "dateOptionalTime" },
+      "language": { "type": "string" },
+      "title": { "type": "string" },
+      "price": { "type": "double" }
+    }
+  }
+}
+
+PUT /ohamazon/_mapping/notifications
+{
+  "notifications": {
+    "properties": {
+      "userId": { "type": "string" },
+      "queryMoniker": { "type": "string" },
+      "data": { "type": "string" }
+    }
+  }
+}
+
+PUT /ohamazon/.percolator/1
+{
+  "query" : {
+    "match" : {
+      "title" : "dracula"
+    }
+  },
+  "userId": "jasonf"
+}
+
+GET /ohamazon/.percolator/_search
+{
+  "query": {
+    "match_all" : {}
+  }
+}
+
+GET /ohamazon/book/_percolate
+{
+  "doc" : {"author":"Stoker, Bram","isbn-10":"1503261387","isbn-13":"978-1503261389","publisher":"CreateSpace Independent Publishing Platform","datePublished":"2014-11-28","language":"English","title":"Dracula","price":9.99}
+}
+
+DELETE /ohamazon/notifications/_query
+{
+    "query" : {
+        "match_all" : {}
+    }
+}
+
+DELETE /ohamazon/book/_query
+{
+    "query" : {
+        "match_all" : {}
+    }
+}
+
+GET /ohamazon/book/_search
+{
+  "query": {
+    "match_all" : {}
+  }
+}
+
+GET /ohamazon/notifications/_search
+{
+  "query": {
+    "match_all" : {}
+  }
+}
+
+POST /_bulk
+{"index":{"_index":"ohamazon","_type":"book"}}
+{"author":"Conan Doyle, Arthur","isbn-10":"1593080344","isbn-13":"978-1593080341","publisher":"Barnes & Noble Classics","datePublished":"2003-09-01","language":"English","title":"The Complete Sherlock Holmes, Volume I","price":8.95}
+{"index":{"_index":"ohamazon","_type":"book"}}
+{"author":"Conan Doyle, Arthur","isbn-10":"1593080409","isbn-13":"978-1593080402","publisher":"Barnes & Noble Classics","datePublished":"2003-10-01","language":"English","title":"The Complete Sherlock Holmes, Volume II","price":8.95}
+{"index":{"_index":"ohamazon","_type":"book"}}
+{"author":"Vonnegut, Kurt","isbn-10":"0440180295","isbn-13":"978-0440180296","publisher":"Dell","datePublished":"1991-11-03","language":"English","title":"Slaughterhouse Five","price":6.00}
+{"index":{"_index":"ohamazon","_type":"book"}}
+{"author":"Stoker, Bram","isbn-10":"1503261387","isbn-13":"978-1503261389","publisher":"CreateSpace Independent Publishing Platform","datePublished":"2014-11-28","language":"English","title":"Dracula","price":9.99}
+{"index":{"_index":"ohamazon","_type":"book"}}
+{"author":"Shelley, Mary","isbn-10":"0486282112","isbn-13":"978-0486282114","publisher":"Dover Publications","datePublished":"1994-10-21","language":"English","title":"Frankenstein","price":3.60}
+
+
