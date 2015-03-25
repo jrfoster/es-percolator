@@ -1,6 +1,7 @@
 package com.jrfoster.spark.streaming.es
 
 import scala.collection.mutable.Buffer
+import scala.util.Try
 
 import org.apache.spark.{ AccumulatorParam, Logging, SparkConf }
 import org.apache.spark.streaming.{ Seconds, StreamingContext }
@@ -67,24 +68,24 @@ object Percolator extends Serializable with Logging {
     try {
       node = NodeBuilder.nodeBuilder().clusterName("jrf-escluster").client(true).node()
 
+      def matchMapper(m: org.elasticsearch.action.percolate.PercolateResponse.Match): String = {
+        val queryId = m.getId().toString()
+        val matchedQuery = node.client.prepareGet(m.getIndex().toString(), ".percolator", queryId)
+          .setFetchSource("userId", "query")
+          .execute().actionGet()
+        val userId = Try(matchedQuery.getSource().get("userId").toString()).getOrElse("MISSING")
+        s"""{"userId":"${userId}","queryMoniker":"${queryId}","data":"Your Book Has Arrived!"}"""
+      }
+
       val response = node.client.preparePercolate()
         .setIndices("ohamazon")
         .setDocumentType("book")
         .setPercolateDoc(PercolateSourceBuilder.docBuilder().setDoc(doc))
         .execute().actionGet()
 
-      val notifs = Buffer[String]()
-      response.getMatches().foreach(m => {
-        val index = m.getIndex().toString()
-        val queryId = m.getId().toString()
-        val matchedQuery = node.client.prepareGet(index, ".percolator", queryId)
-          .setFetchSource("userId", "query")
-          .execute().actionGet()
-        val userId = matchedQuery.getSource().get("userId").toString()
-        notifs += s"""{"userId":"${userId}","queryMoniker":"${queryId}","data":""}"""
-      })
-
-      notifs
+      response.getMatches()
+        .map(m => matchMapper(m))
+        .toBuffer[String]
 
     } catch {
       case ex: Exception =>
