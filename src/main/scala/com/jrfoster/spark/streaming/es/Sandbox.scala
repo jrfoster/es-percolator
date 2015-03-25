@@ -1,4 +1,4 @@
-package com.orchestral.analytics.sandbox
+package com.jrfoster.spark.streaming.es
 
 import org.elasticsearch.node.NodeBuilder
 import org.elasticsearch.action.get.GetResponse
