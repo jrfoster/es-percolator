@@ -42,7 +42,7 @@ object Percolator extends Serializable with Logging {
     stream.foreachRDD(rdd => {
       val messages = rdd.map(_._2)
 
-      // Save them to ES for generalized search
+      // Save whatever books we got on this RDD to ES for generalized search
       messages.saveToEs(bookParams)
 
       // Percolate each document and use the accumulator to keep matches.  The
@@ -68,7 +68,7 @@ object Percolator extends Serializable with Logging {
     try {
       node = NodeBuilder.nodeBuilder().clusterName("jrf-escluster").client(true).node()
 
-      def matchMapper(m: org.elasticsearch.action.percolate.PercolateResponse.Match): String = {
+      def matchMapper(m: Match): String = {
         val queryId = m.getId().toString()
         val matchedQuery = node.client.prepareGet(m.getIndex().toString(), ".percolator", queryId)
           .setFetchSource("userId", "query")
